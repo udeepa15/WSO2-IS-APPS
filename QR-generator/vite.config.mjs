@@ -9,6 +9,13 @@ export default defineConfig({
     allowedHosts: [
       'masked-unprofitably-ardith.ngrok-free.dev'
     ],
+    proxy: {
+      '/api': {
+        target: 'http://localhost:4000',
+        changeOrigin: true,
+        rewrite: path => path.replace(/^\/api/, ''),
+      },
+    },
   },
   build: {
     outDir: 'dist',
