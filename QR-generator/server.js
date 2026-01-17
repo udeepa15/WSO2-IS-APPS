@@ -34,16 +34,17 @@ setInterval(cleanupExpiredRequests, 60000);
 
 app.use(cors({ origin: '*', methods: ['GET', 'POST', 'OPTIONS'], allowedHeaders: ['Content-Type', 'Authorization'] }));
 app.use(express.json());
+app.use(express.urlencoded({ extended: true })); // Support form-urlencoded data from wallet
+app.use(express.urlencoded({ extended: true })); // Support form-urlencoded data from wallet
 
 
-// Example EC JWK for signing (P-256, replace with your real private key for production)
+// Ed25519 JWK for signing (replace with your real private key for production)
 const demoJwk = {
-  kty: 'EC',
-  x: 'gWvyGTmu2Xp3YVGm-t8lv2f04dfL8QbNeTEMOYtcDsQ',
-  y: 'qeh7-ZJsq5FszjVGXb6P75bf0HbJ-zVHXLZPaV_uIn0',
-  crv: 'P-256',
-  d: 'vSaSW4_4-H71gj9x_WZxImWKNvel3qKgyibhK3ed3Yw',
-  alg: 'ES256',
+  crv: 'Ed25519',
+  d: '7aTFc2W_6wfxIxpU1C6wqLnq0qbot0MdDAEZqC8JxEs',
+  x: 'Z0STXfp-6kS5Z5F11kZ-ROfPdTNWy09x0ZvtsnAfxrE',
+  kty: 'OKP',
+  alg: 'EdDSA',
   use: 'sig',
   kid: 'did:web:masked-unprofitably-ardith.ngrok-free.dev#owner'
 };
@@ -76,7 +77,7 @@ app.get('/v1/verify/vp-request/req_e85eebdd-5cce-418b-8c7f-cbbd2a3b20c7', async 
     client_id: 'did:web:masked-unprofitably-ardith.ngrok-free.dev',
     client_id_scheme: 'did',
     response_type: 'vp_token',
-    response_mode: 'direct_post',
+    response_mode: 'direct_post.jwt',
     nonce: nonce,
     state: state,
     presentation_definition: {
@@ -84,20 +85,18 @@ app.get('/v1/verify/vp-request/req_e85eebdd-5cce-418b-8c7f-cbbd2a3b20c7', async 
       format: {
         ldp_vc: {
           proof_type: [
-            'JsonWebSignature2020',
             'Ed25519Signature2018',
-            'EcdsaSecp256k1Signature2019',
-            'RsaSignature2018'
+            'JsonWebSignature2020'
           ]
         },
         jwt_vc_json: {
-          alg: ['ES256', 'ES256K', 'EdDSA', 'RS256']
+          alg: ['ED25519']
         },
         'vc+sd-jwt': {
-          'sd-jwt_alg_values': ['ES256', 'ES384', 'ES512', 'EdDSA']
+          'sd-jwt_alg_values': ['ED25519']
         },
         mso_mdoc: {
-          alg: ['ES256', 'ES384', 'ES512']
+          alg: ['ED25519']
         }
       },
       input_descriptors: [
@@ -108,31 +107,18 @@ app.get('/v1/verify/vp-request/req_e85eebdd-5cce-418b-8c7f-cbbd2a3b20c7', async 
           format: {
             ldp_vc: {
               proof_type: [
-                'JsonWebSignature2020',
                 'Ed25519Signature2018',
-                'EcdsaSecp256k1Signature2019'
+                'JsonWebSignature2020'
               ]
             },
             jwt_vc_json: {
-              alg: ['ES256', 'ES256K', 'EdDSA']
+              alg: ['ED25519']
             }
           },
           constraints: {
             fields: [
               {
-                path: ['$.type'],
-                filter: {
-                  type: 'array',
-                  contains: {
-                    const: 'VerifiableCredential'
-                  }
-                }
-              },
-              {
-                path: ['$.credentialSubject'],
-                filter: {
-                  type: 'object'
-                }
+                path: ['$.credentialSubject']
               }
             ]
           }
@@ -143,7 +129,36 @@ app.get('/v1/verify/vp-request/req_e85eebdd-5cce-418b-8c7f-cbbd2a3b20c7', async 
     client_metadata: {
       client_name: 'Demo OpenID4VP Verifier',
       logo_uri: 'https://masked-unprofitably-ardith.ngrok-free.dev/logo.png',
-      client_purpose: 'Identity Verification'
+      client_purpose: 'Identity Verification',
+      authorization_encrypted_response_alg: 'ECDH-ES',
+      authorization_encrypted_response_enc: 'A256GCM',
+      jwks: {
+        keys: [
+          {
+            kty: 'EC',
+            x: 'zRZKJ_XZ8R1QjJIfdz1MtNXn7EKHDPlLN80yXj-qGpc',
+            y: 'Q1tqgAuz13AkmKIsvcdug6O--phrFvrVhorjqiLZc9w',
+            crv: 'P-256',
+            use: 'enc',
+            kid: 'enc-key-1',
+            alg: 'ECDH-ES'
+          }
+        ]
+      },
+      vp_formats: {
+        jwt_vp_json: {
+          alg: ['EdDSA', 'ES256']
+        },
+        jwt_vc_json: {
+          alg: ['EdDSA', 'ES256']
+        },
+        ldp_vp: {
+          proof_type: ['Ed25519Signature2018', 'JsonWebSignature2020']
+        },
+        ldp_vc: {
+          proof_type: ['Ed25519Signature2018', 'JsonWebSignature2020']
+        }
+      }
     },
     iss: 'did:web:masked-unprofitably-ardith.ngrok-free.dev',
     aud: 'https://self-issued.me/v2',
@@ -152,12 +167,12 @@ app.get('/v1/verify/vp-request/req_e85eebdd-5cce-418b-8c7f-cbbd2a3b20c7', async 
   };
   try {
     console.log('JWT Payload:', JSON.stringify(payload, null, 2));
-    const privateKey = await importJWK(demoJwk, 'ES256');
+    const privateKey = await importJWK(demoJwk, 'EdDSA');
     console.log('Signing JWT with kid:', demoJwk.kid);
     // CRITICAL: Use 'oauth-authz-req+jwt' as typ per OpenID4VP spec
     const jwt = await new SignJWT(payload)
       .setProtectedHeader({ 
-        alg: 'ES256', 
+        alg: 'EdDSA', 
         kid: demoJwk.kid, 
         typ: 'oauth-authz-req+jwt'  // Required by wallet validation
       })
@@ -224,22 +239,15 @@ app.get('/.well-known/did.json', (req, res) => {
   const didDocument = {
     '@context': [
       'https://www.w3.org/ns/did/v1',
-      'https://w3id.org/security/suites/jws-2020/v1'
+      'https://w3id.org/security/suites/ed25519-2020/v1'
     ],
     id: 'did:web:masked-unprofitably-ardith.ngrok-free.dev',
     verificationMethod: [
       {
         id: 'did:web:masked-unprofitably-ardith.ngrok-free.dev#owner',
-        type: 'JsonWebKey2020',
+        type: 'Ed25519VerificationKey2020',
         controller: 'did:web:masked-unprofitably-ardith.ngrok-free.dev',
-        publicKeyJwk: {
-          kty: demoJwk.kty,
-          crv: demoJwk.crv,
-          x: demoJwk.x,
-          y: demoJwk.y,
-          alg: demoJwk.alg,
-          use: demoJwk.use
-        },
+        publicKeyMultibase: 'z6MkmQNgoLM1TmXousVMF9ATN6FGP6imY67kzp4oNdYXiLg8'
       },
     ],
     authentication: [
@@ -432,7 +440,7 @@ app.post('/v1/verify/vp-request/req_e85eebdd-5cce-418b-8c7f-cbbd2a3b20c7', async
     client_id: 'did:web:masked-unprofitably-ardith.ngrok-free.dev',
     client_id_scheme: 'did',
     response_type: 'vp_token',
-    response_mode: 'direct_post',
+    response_mode: 'direct_post.jwt',
     nonce: nonce,
     state: state,
     presentation_definition: {
@@ -440,20 +448,18 @@ app.post('/v1/verify/vp-request/req_e85eebdd-5cce-418b-8c7f-cbbd2a3b20c7', async
       format: {
         ldp_vc: {
           proof_type: [
-            'JsonWebSignature2020',
             'Ed25519Signature2018',
-            'EcdsaSecp256k1Signature2019',
-            'RsaSignature2018'
+            'JsonWebSignature2020'
           ]
         },
         jwt_vc_json: {
-          alg: ['ES256', 'ES256K', 'EdDSA', 'RS256']
+          alg: ['ED25519']
         },
         'vc+sd-jwt': {
-          'sd-jwt_alg_values': ['ES256', 'ES384', 'ES512', 'EdDSA']
+          'sd-jwt_alg_values': ['ED25519']
         },
         mso_mdoc: {
-          alg: ['ES256', 'ES384', 'ES512']
+          alg: ['ED25519']
         }
       },
       input_descriptors: [
@@ -464,31 +470,18 @@ app.post('/v1/verify/vp-request/req_e85eebdd-5cce-418b-8c7f-cbbd2a3b20c7', async
           format: {
             ldp_vc: {
               proof_type: [
-                'JsonWebSignature2020',
                 'Ed25519Signature2018',
-                'EcdsaSecp256k1Signature2019'
+                'JsonWebSignature2020'
               ]
             },
             jwt_vc_json: {
-              alg: ['ES256', 'ES256K', 'EdDSA']
+              alg: ['ED25519']
             }
           },
           constraints: {
             fields: [
               {
-                path: ['$.type'],
-                filter: {
-                  type: 'array',
-                  contains: {
-                    const: 'VerifiableCredential'
-                  }
-                }
-              },
-              {
-                path: ['$.credentialSubject'],
-                filter: {
-                  type: 'object'
-                }
+                path: ['$.credentialSubject']
               }
             ]
           }
@@ -499,7 +492,36 @@ app.post('/v1/verify/vp-request/req_e85eebdd-5cce-418b-8c7f-cbbd2a3b20c7', async
     client_metadata: {
       client_name: 'Demo OpenID4VP Verifier',
       logo_uri: 'https://masked-unprofitably-ardith.ngrok-free.dev/logo.png',
-      client_purpose: 'Identity Verification'
+      client_purpose: 'Identity Verification',
+      authorization_encrypted_response_alg: 'ECDH-ES',
+      authorization_encrypted_response_enc: 'A256GCM',
+      jwks: {
+        keys: [
+          {
+            kty: 'EC',
+            x: 'zRZKJ_XZ8R1QjJIfdz1MtNXn7EKHDPlLN80yXj-qGpc',
+            y: 'Q1tqgAuz13AkmKIsvcdug6O--phrFvrVhorjqiLZc9w',
+            crv: 'P-256',
+            use: 'enc',
+            kid: 'enc-key-1',
+            alg: 'ECDH-ES'
+          }
+        ]
+      },
+      vp_formats: {
+        jwt_vp_json: {
+          alg: ['EdDSA', 'ES256']
+        },
+        jwt_vc_json: {
+          alg: ['EdDSA', 'ES256']
+        },
+        ldp_vp: {
+          proof_type: ['Ed25519Signature2018', 'JsonWebSignature2020']
+        },
+        ldp_vc: {
+          proof_type: ['Ed25519Signature2018', 'JsonWebSignature2020']
+        }
+      }
     },
     iss: 'did:web:masked-unprofitably-ardith.ngrok-free.dev',
     aud: 'https://self-issued.me/v2',
@@ -508,11 +530,11 @@ app.post('/v1/verify/vp-request/req_e85eebdd-5cce-418b-8c7f-cbbd2a3b20c7', async
   };
   try {
     console.log('JWT Payload (POST):', JSON.stringify(payload, null, 2));
-    const privateKey = await importJWK(demoJwk, 'ES256');
+    const privateKey = await importJWK(demoJwk, 'EdDSA');
     console.log('Signing JWT with kid:', demoJwk.kid);
     const jwt = await new SignJWT(payload)
       .setProtectedHeader({ 
-        alg: 'ES256', 
+        alg: 'EdDSA', 
         kid: demoJwk.kid, 
         typ: 'oauth-authz-req+jwt'  // Required by wallet validation
       })
