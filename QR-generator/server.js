@@ -240,7 +240,25 @@ app.post('/v1/verify/response', async (req, res) => {
   console.log('Headers:', req.headers);
   console.log('Body:', JSON.stringify(req.body, null, 2));
   
-  const { vp_token, presentation_submission, state } = req.body;
+  let { vp_token, presentation_submission, state } = req.body;
+  
+  // Parse JSON strings if needed
+  if (typeof vp_token === 'string' && vp_token.startsWith('{')) {
+    try {
+      vp_token = JSON.parse(vp_token);
+    } catch (e) {
+      console.log('vp_token is a JSON-LD string, keeping as is');
+    }
+  }
+  
+  if (typeof presentation_submission === 'string') {
+    try {
+      presentation_submission = JSON.parse(presentation_submission);
+      console.log('Parsed presentation_submission from string to object');
+    } catch (e) {
+      console.error('Failed to parse presentation_submission:', e);
+    }
+  }
   
   // Validation 1: Check required parameters
   if (!vp_token || !presentation_submission || !state) {
