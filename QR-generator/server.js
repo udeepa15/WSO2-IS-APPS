@@ -74,96 +74,68 @@ app.get('/v1/verify/vp-request/req_e85eebdd-5cce-418b-8c7f-cbbd2a3b20c7', async 
   console.log('Active requests count:', activeRequests.size);
   
   const payload = {
-    client_id: 'did:web:masked-unprofitably-ardith.ngrok-free.dev',
-    client_id_scheme: 'did',
+    response_uri: 'https://masked-unprofitably-ardith.ngrok-free.dev/v1/verify/response',
+    iss: 'did:web:masked-unprofitably-ardith.ngrok-free.dev',
     response_type: 'vp_token',
-    response_mode: 'direct_post.jwt',
-    nonce: nonce,
-    state: state,
     presentation_definition: {
-      id: 'vp_token_presentation_definition',
-      format: {
-        ldp_vc: {
-          proof_type: [
-            'Ed25519Signature2018',
-            'JsonWebSignature2020'
-          ]
-        },
-        jwt_vc_json: {
-          alg: ['ED25519']
-        },
-        'vc+sd-jwt': {
-          'sd-jwt_alg_values': ['ED25519']
-        },
-        mso_mdoc: {
-          alg: ['ED25519']
-        }
-      },
+      id: 'c4822b58-7fb4-454e-b827-f8758fe27f9a',
+      purpose: 'Relying party is requesting your digital ID for the purpose of Self-Authentication',
       input_descriptors: [
         {
-          id: 'identity_credential',
-          name: 'Verifiable Credential',
-          purpose: 'We need to verify your identity using a verifiable credential',
+          id: 'id card credential',
           format: {
             ldp_vc: {
               proof_type: [
-                'Ed25519Signature2018',
-                'JsonWebSignature2020'
+                'Ed25519Signature2020'
               ]
-            },
-            jwt_vc_json: {
-              alg: ['ED25519']
             }
           },
           constraints: {
             fields: [
               {
-                path: ['$.credentialSubject']
+                path: ['$.type'],
+                filter: {
+                  type: 'object',
+                  pattern: 'LifeInsuranceCredential'
+                }
               }
             ]
           }
         }
       ]
     },
-    response_uri: 'https://masked-unprofitably-ardith.ngrok-free.dev/v1/verify/response',
+    state: state,
+    iat: Math.floor(Date.now() / 1000),
+    nonce: nonce,
+    client_id: 'did:web:masked-unprofitably-ardith.ngrok-free.dev',
+    jti: generateRandomString(16),
     client_metadata: {
-      client_name: 'Demo OpenID4VP Verifier',
-      logo_uri: 'https://masked-unprofitably-ardith.ngrok-free.dev/logo.png',
-      client_purpose: 'Identity Verification',
-      authorization_encrypted_response_alg: 'ECDH-ES',
-      authorization_encrypted_response_enc: 'A256GCM',
-      jwks: {
-        keys: [
-          {
-            kty: 'EC',
-            x: 'zRZKJ_XZ8R1QjJIfdz1MtNXn7EKHDPlLN80yXj-qGpc',
-            y: 'Q1tqgAuz13AkmKIsvcdug6O--phrFvrVhorjqiLZc9w',
-            crv: 'P-256',
-            use: 'enc',
-            kid: 'enc-key-1',
-            alg: 'ECDH-ES'
-          }
-        ]
-      },
+      client_name: 'did:web:masked-unprofitably-ardith.ngrok-free.dev',
       vp_formats: {
-        jwt_vp_json: {
-          alg: ['EdDSA', 'ES256']
-        },
-        jwt_vc_json: {
-          alg: ['EdDSA', 'ES256']
-        },
         ldp_vp: {
-          proof_type: ['Ed25519Signature2018', 'JsonWebSignature2020']
+          proof_type: [
+            'Ed25519Signature2018',
+            'Ed25519Signature2020',
+            'RsaSignature2018'
+          ]
         },
-        ldp_vc: {
-          proof_type: ['Ed25519Signature2018', 'JsonWebSignature2020']
+        'vc+sd-jwt': {
+          'sd-jwt_alg_values': [
+            'RS256',
+            'ES256',
+            'ES256K',
+            'EdDSA'
+          ],
+          'kb-jwt_alg_values': [
+            'RS256',
+            'ES256',
+            'ES256K',
+            'EdDSA'
+          ]
         }
       }
     },
-    iss: 'did:web:masked-unprofitably-ardith.ngrok-free.dev',
-    aud: 'https://self-issued.me/v2',
-    iat: Math.floor(Date.now() / 1000),
-    exp: Math.floor(Date.now() / 1000) + 600,
+    response_mode: 'direct_post'
   };
   try {
     console.log('JWT Payload:', JSON.stringify(payload, null, 2));
@@ -437,96 +409,68 @@ app.post('/v1/verify/vp-request/req_e85eebdd-5cce-418b-8c7f-cbbd2a3b20c7', async
   
   // Same response as GET, but with wallet metadata logged
   const payload = {
-    client_id: 'did:web:masked-unprofitably-ardith.ngrok-free.dev',
-    client_id_scheme: 'did',
+    response_uri: 'https://masked-unprofitably-ardith.ngrok-free.dev/v1/verify/response',
+    iss: 'did:web:masked-unprofitably-ardith.ngrok-free.dev',
     response_type: 'vp_token',
-    response_mode: 'direct_post.jwt',
-    nonce: nonce,
-    state: state,
     presentation_definition: {
-      id: 'vp_token_presentation_definition',
-      format: {
-        ldp_vc: {
-          proof_type: [
-            'Ed25519Signature2018',
-            'JsonWebSignature2020'
-          ]
-        },
-        jwt_vc_json: {
-          alg: ['ED25519']
-        },
-        'vc+sd-jwt': {
-          'sd-jwt_alg_values': ['ED25519']
-        },
-        mso_mdoc: {
-          alg: ['ED25519']
-        }
-      },
+      id: 'c4822b58-7fb4-454e-b827-f8758fe27f9a',
+      purpose: 'Relying party is requesting your digital ID for the purpose of Self-Authentication',
       input_descriptors: [
         {
-          id: 'identity_credential',
-          name: 'Verifiable Credential',
-          purpose: 'We need to verify your identity using a verifiable credential',
+          id: 'id card credential',
           format: {
             ldp_vc: {
               proof_type: [
-                'Ed25519Signature2018',
-                'JsonWebSignature2020'
+                'Ed25519Signature2020'
               ]
-            },
-            jwt_vc_json: {
-              alg: ['ED25519']
             }
           },
           constraints: {
             fields: [
               {
-                path: ['$.credentialSubject']
+                path: ['$.type'],
+                filter: {
+                  type: 'object',
+                  pattern: 'LifeInsuranceCredential'
+                }
               }
             ]
           }
         }
       ]
     },
-    response_uri: 'https://masked-unprofitably-ardith.ngrok-free.dev/v1/verify/response',
+    state: state,
+    iat: Math.floor(Date.now() / 1000),
+    nonce: nonce,
+    client_id: 'did:web:masked-unprofitably-ardith.ngrok-free.dev',
+    jti: generateRandomString(16),
     client_metadata: {
-      client_name: 'Demo OpenID4VP Verifier',
-      logo_uri: 'https://masked-unprofitably-ardith.ngrok-free.dev/logo.png',
-      client_purpose: 'Identity Verification',
-      authorization_encrypted_response_alg: 'ECDH-ES',
-      authorization_encrypted_response_enc: 'A256GCM',
-      jwks: {
-        keys: [
-          {
-            kty: 'EC',
-            x: 'zRZKJ_XZ8R1QjJIfdz1MtNXn7EKHDPlLN80yXj-qGpc',
-            y: 'Q1tqgAuz13AkmKIsvcdug6O--phrFvrVhorjqiLZc9w',
-            crv: 'P-256',
-            use: 'enc',
-            kid: 'enc-key-1',
-            alg: 'ECDH-ES'
-          }
-        ]
-      },
+      client_name: 'did:web:masked-unprofitably-ardith.ngrok-free.dev',
       vp_formats: {
-        jwt_vp_json: {
-          alg: ['EdDSA', 'ES256']
-        },
-        jwt_vc_json: {
-          alg: ['EdDSA', 'ES256']
-        },
         ldp_vp: {
-          proof_type: ['Ed25519Signature2018', 'JsonWebSignature2020']
+          proof_type: [
+            'Ed25519Signature2018',
+            'Ed25519Signature2020',
+            'RsaSignature2018'
+          ]
         },
-        ldp_vc: {
-          proof_type: ['Ed25519Signature2018', 'JsonWebSignature2020']
+        'vc+sd-jwt': {
+          'sd-jwt_alg_values': [
+            'RS256',
+            'ES256',
+            'ES256K',
+            'EdDSA'
+          ],
+          'kb-jwt_alg_values': [
+            'RS256',
+            'ES256',
+            'ES256K',
+            'EdDSA'
+          ]
         }
       }
     },
-    iss: 'did:web:masked-unprofitably-ardith.ngrok-free.dev',
-    aud: 'https://self-issued.me/v2',
-    iat: Math.floor(Date.now() / 1000),
-    exp: Math.floor(Date.now() / 1000) + 600,
+    response_mode: 'direct_post'
   };
   try {
     console.log('JWT Payload (POST):', JSON.stringify(payload, null, 2));
