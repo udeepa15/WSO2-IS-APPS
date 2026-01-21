@@ -2,10 +2,6 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthContext } from "@asgardeo/auth-react";
 
-import reactLogo from "../assets/react.svg";
-import asgardeoLogo from "../assets/asgardeo.svg";
-import viteLogo from "/vite.svg";
-
 import { SignInBtn } from "../components/SignInBtn";
 
 export const LandingPage = () => { 
@@ -21,23 +17,57 @@ export const LandingPage = () => {
     }, [ state ]);
 
     return (
-        <>
-            <div>
-                <a href='https://wso2.com/asgardeo' target='_blank'>
-                    <img src={asgardeoLogo} className='logo asgardeo' alt='Asgardeo logo' />
-                </a>
-                <a href='https://react.dev' target='_blank'>
-                    <img src={reactLogo} className='logo react' alt='React logo' />
-                </a>
-                <a href='https://vitejs.dev' target='_blank'>
-                    <img src={viteLogo} className='logo' alt='Vite logo' />
-                </a>
+        <div className="oid4vp-container">
+            <div className="oid4vp-card">
+                <div className="oid4vp-header">
+                    <svg className="oid4vp-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                    </svg>
+                    <h1>OpenID4VP Authentication</h1>
+                </div>
+
+                <div className="oid4vp-info">
+                    <p className="oid4vp-subtitle">Present Your Verifiable Credentials</p>
+                    <p className="oid4vp-description">
+                        This demo showcases OpenID for Verifiable Presentations (OpenID4VP) protocol.
+                        Authenticate by presenting your verifiable credentials from your digital wallet.
+                    </p>
+                </div>
+
+                <div className="credential-flow">
+                    <div className="flow-step">
+                        <div className="step-number">1</div>
+                        <div className="step-content">
+                            <h3>Request Received</h3>
+                            <p>Service requests your credentials</p>
+                        </div>
+                    </div>
+                    <div className="flow-arrow">→</div>
+                    <div className="flow-step">
+                        <div className="step-number">2</div>
+                        <div className="step-content">
+                            <h3>Present Credentials</h3>
+                            <p>Share your verifiable credentials</p>
+                        </div>
+                    </div>
+                    <div className="flow-arrow">→</div>
+                    <div className="flow-step">
+                        <div className="step-number">3</div>
+                        <div className="step-content">
+                            <h3>Verified Access</h3>
+                            <p>Get authenticated access</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="button-container">
+                    <SignInBtn />
+                </div>
+
+                <div className="oid4vp-footer">
+                    <p>Powered by WSO2 Identity Server</p>
+                </div>
             </div>
-            <h1>Asgardeo + React + Vite</h1>
-            <p className='read-the-docs'>Click on the logos to learn more</p>
-            <div className="button-container">
-                <SignInBtn />
-            </div>
-        </>
+        </div>
     );
 }

@@ -7,7 +7,7 @@ import "./index.css";
 const asgardeoAuthConfig = {
     signInRedirectURL: "http://localhost:5173",
     signOutRedirectURL: "http://localhost:5173",
-    clientID: "D7UpoR3XtDKm3KsCqcrAontSKYsa",
+    clientID: "pvdjEN1Ee8iF_oVulmIbw5EiBuEa",
     baseUrl: "https://localhost:9443",
     scope: [ "openid", "profile" ],
     enablePKCE: true,

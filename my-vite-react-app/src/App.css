@@ -5,65 +5,284 @@
     text-align: center;
 }
 
-.logo {
-    height: 6em;
-    padding: 1.5em;
-    will-change: filter;
-    transition: filter 300ms;
-}
-.logo:hover {
-    filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-    filter: drop-shadow(0 0 2em #61dafbaa);
-}
-.logo.asgardeo:hover {
-    filter: drop-shadow(0 0 2em #e78a5c);
+/* OpenID4VP Landing Page Styles */
+.oid4vp-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 80vh;
 }
 
-@keyframes logo-spin {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
+.oid4vp-card {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border-radius: 20px;
+    padding: 3rem;
+    max-width: 900px;
+    width: 100%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-@media (prefers-reduced-motion: no-preference) {
-    a:nth-of-type(2) .logo {
-        animation: logo-spin infinite 20s linear;
-    }
+.oid4vp-header {
+    text-align: center;
+    margin-bottom: 2rem;
 }
 
-.card {
-    padding: 2em;
+.oid4vp-icon {
+    width: 80px;
+    height: 80px;
+    color: #646cff;
+    margin-bottom: 1rem;
 }
 
-.read-the-docs {
-    color: #888;
+.oid4vp-header h1 {
+    font-size: 2.5em;
+    margin: 0;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
-/* Center the buttons vertically */
+.oid4vp-info {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.oid4vp-subtitle {
+    font-size: 1.3em;
+    color: #a0a0a0;
+    margin-bottom: 1rem;
+}
+
+.oid4vp-description {
+    color: #c0c0c0;
+    line-height: 1.6;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.credential-flow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 3rem 0;
+    padding: 2rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 15px;
+}
+
+.flow-step {
+    flex: 1;
+    text-align: center;
+}
+
+.step-number {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem;
+    font-size: 1.5em;
+    font-weight: bold;
+}
+
+.step-content h3 {
+    font-size: 1.1em;
+    margin-bottom: 0.5rem;
+    color: #ffffff;
+}
+
+.step-content p {
+    font-size: 0.9em;
+    color: #a0a0a0;
+    margin: 0;
+}
+
+.flow-arrow {
+    font-size: 2em;
+    color: #667eea;
+    padding: 0 1rem;
+}
+
 .button-container {
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-top: 100px;
+    margin-top: 3rem;
 }
 
-/* Style the buttons */
-button {
-    padding: 10px 20px; /* Adjust the padding as needed */
-    background-color: black;
+.present-credentials-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 1rem 2.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     border: none;
-    font-size: 16px; /* Adjust the font size as needed */
-    width: 200px; /* Set the desired width for both buttons */
-    text-align: center; /* Center the text within the buttons */
+    border-radius: 50px;
+    font-size: 1.1em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    width: auto;
+    min-width: 300px;
 }
 
-/* Add some spacing between the buttons */
-button + button {
-    margin-top: 10px;
+.present-credentials-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+}
+
+.btn-icon {
+    width: 24px;
+    height: 24px;
+}
+
+.oid4vp-footer {
+    text-align: center;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.oid4vp-footer p {
+    color: #888;
+    font-size: 0.9em;
+}
+
+/* Home Page Styles */
+.home-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 80vh;
+}
+
+.home-card {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border-radius: 20px;
+    padding: 3rem;
+    max-width: 700px;
+    width: 100%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.success-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.success-icon {
+    width: 80px;
+    height: 80px;
+    color: #4ade80;
+    margin-bottom: 1rem;
+}
+
+.success-header h1 {
+    font-size: 2em;
+    margin: 0;
+    color: #4ade80;
+}
+
+.verification-info {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.verification-subtitle {
+    font-size: 1.2em;
+    color: #a0a0a0;
+    margin-bottom: 1rem;
+}
+
+.verification-description {
+    color: #c0c0c0;
+    line-height: 1.6;
+}
+
+.credential-details {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 15px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+
+.credential-details h3 {
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    color: #ffffff;
+    font-size: 1.3em;
+}
+
+.detail-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 1rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.detail-item:last-child {
+    border-bottom: none;
+}
+
+.detail-label {
+    color: #a0a0a0;
+    font-weight: 500;
+}
+
+.detail-value {
+    color: #ffffff;
+    font-weight: 600;
+}
+
+.status-authenticated {
+    color: #4ade80;
+}
+
+.home-actions {
+    text-align: center;
+}
+
+.sign-out-btn {
+    padding: 1rem 2.5rem;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50px;
+    font-size: 1em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 200px;
+}
+
+.sign-out-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .credential-flow {
+        flex-direction: column;
+    }
+    
+    .flow-arrow {
+        transform: rotate(90deg);
+        margin: 1rem 0;
+    }
+    
+    .oid4vp-card, .home-card {
+        padding: 2rem;
+    }
 }
