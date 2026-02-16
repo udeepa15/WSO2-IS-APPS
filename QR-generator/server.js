@@ -4,7 +4,7 @@ const express = require('express');
 const cors = require('cors');
 const crypto = require('crypto');
 const { importJWK, SignJWT, jwtVerify, decodeJwt } = require('jose');
-const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
+const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
 
 const app = express();
 const PORT = 4000;
@@ -59,35 +59,35 @@ const TRUSTED_ISSUERS = new Set([
 // Helper function to resolve did:web DID documents
 async function resolveDidWeb(did) {
   console.log(`[DID Resolution] Resolving DID: ${did}`);
-  
+
   if (!did.startsWith('did:web:')) {
     throw new Error('Only did:web method is supported');
   }
-  
+
   // Convert did:web to HTTPS URL per W3C DID spec
   // did:web:example.com -> https://example.com/.well-known/did.json
   // did:web:example.com:path:to:did -> https://example.com/path/to/did/did.json
   const didParts = did.replace('did:web:', '').split(':');
   const domain = didParts[0];
   const path = didParts.slice(1).join('/');
-  
+
   // If there's a path, use /path/did.json (not /.well-known/did.json)
-  const url = path 
+  const url = path
     ? `https://${domain}/${path}/did.json`
     : `https://${domain}/.well-known/did.json`;
-  
+
   console.log(`[DID Resolution] Fetching DID document from: ${url}`);
-  
+
   try {
     const response = await fetch(url);
     if (!response.ok) {
       throw new Error(`DID document not found: ${response.status} ${response.statusText}`);
     }
-    
+
     const didDocument = await response.json();
     console.log(`[DID Resolution] ✓ Successfully resolved DID document`);
     console.log(`[DID Resolution] Verification methods:`, didDocument.verificationMethod?.map(vm => vm.id));
-    
+
     return didDocument;
   } catch (error) {
     console.error(`[DID Resolution] ✗ Failed to resolve DID: ${error.message}`);
@@ -98,19 +98,19 @@ async function resolveDidWeb(did) {
 // Helper function to verify JWT VC issuer signature
 async function verifyJwtVcIssuer(vcJwt) {
   console.log('\n[JWT VC] Starting issuer verification...');
-  
+
   try {
     // Decode JWT header to get kid
     const decoded = decodeJwt(vcJwt);
     const header = JSON.parse(Buffer.from(vcJwt.split('.')[0], 'base64').toString());
-    
+
     const issuerDid = decoded.iss;
     const kid = header.kid;
-    
+
     console.log(`[JWT VC] Issuer DID: ${issuerDid}`);
     console.log(`[JWT VC] Key ID (kid): ${kid}`);
     console.log(`[JWT VC] Subject:`, JSON.stringify(decoded.vc?.credentialSubject || decoded.credentialSubject, null, 2));
-    
+
     // Check if issuer is trusted
     console.log(`[Trust Policy] Checking if issuer is in allowlist...`);
     if (!TRUSTED_ISSUERS.has(issuerDid)) {
@@ -119,31 +119,31 @@ async function verifyJwtVcIssuer(vcJwt) {
       throw new Error(`Untrusted issuer: ${issuerDid}`);
     }
     console.log(`[Trust Policy] ✓ Issuer is trusted`);
-    
+
     // Resolve issuer DID document
     const didDocument = await resolveDidWeb(issuerDid);
-    
+
     // Find the verification method matching the kid
     let verificationMethod = didDocument.verificationMethod?.find(vm => vm.id === kid);
-    
+
     if (!verificationMethod && kid) {
       // Try to find by fragment if kid is just the fragment
-      verificationMethod = didDocument.verificationMethod?.find(vm => 
+      verificationMethod = didDocument.verificationMethod?.find(vm =>
         vm.id.endsWith(`#${kid}`) || vm.id === `${issuerDid}#${kid}`
       );
     }
-    
+
     if (!verificationMethod) {
       console.error(`[JWT VC] ✗ Verification method not found for kid: ${kid}`);
       throw new Error(`Verification method not found: ${kid}`);
     }
-    
+
     console.log(`[JWT VC] Using verification method: ${verificationMethod.id}`);
     console.log(`[JWT VC] Key type: ${verificationMethod.type}`);
-    
+
     // Extract public key from verification method
     let publicKeyJwk;
-    
+
     if (verificationMethod.publicKeyJwk) {
       publicKeyJwk = verificationMethod.publicKeyJwk;
     } else if (verificationMethod.publicKeyMultibase) {
@@ -162,25 +162,25 @@ async function verifyJwtVcIssuer(vcJwt) {
     } else {
       throw new Error('No supported public key format found in verification method');
     }
-    
+
     // Import the public key
     console.log(`[JWT VC] Importing public key for verification...`);
     const publicKey = await importJWK(publicKeyJwk);
-    
+
     // Verify the JWT signature
     console.log(`[JWT VC] Verifying JWT signature...`);
     const { payload, protectedHeader } = await jwtVerify(vcJwt, publicKey);
-    
+
     console.log(`[JWT VC] ✓ Signature verified successfully!`);
     console.log(`[JWT VC] ✓ Issuer verification complete`);
-    
+
     return {
       verified: true,
       issuer: issuerDid,
       verificationMethod: verificationMethod.id,
       payload: payload
     };
-    
+
   } catch (error) {
     console.error(`[JWT VC] ✗ Issuer verification failed: ${error.message}`);
     throw error;
@@ -190,15 +190,15 @@ async function verifyJwtVcIssuer(vcJwt) {
 // Helper function to verify JSON-LD VC issuer
 async function verifyJsonLdVcIssuer(vc) {
   console.log('\n[JSON-LD VC] Starting issuer verification...');
-  
+
   try {
     const issuerDid = typeof vc.issuer === 'string' ? vc.issuer : vc.issuer?.id;
-    
+
     console.log(`[JSON-LD VC] Issuer DID: ${issuerDid}`);
     console.log(`[JSON-LD VC] Proof type: ${vc.proof?.type}`);
     console.log(`[JSON-LD VC] Verification method: ${vc.proof?.verificationMethod}`);
     console.log(`[JSON-LD VC] Subject:`, JSON.stringify(vc.credentialSubject, null, 2));
-    
+
     // Check if issuer is trusted
     console.log(`[Trust Policy] Checking if issuer is in allowlist...`);
     if (!TRUSTED_ISSUERS.has(issuerDid)) {
@@ -207,34 +207,34 @@ async function verifyJsonLdVcIssuer(vc) {
       throw new Error(`Untrusted issuer: ${issuerDid}`);
     }
     console.log(`[Trust Policy] ✓ Issuer is trusted`);
-    
+
     // Resolve issuer DID document
     const didDocument = await resolveDidWeb(issuerDid);
-    
+
     // Find verification method
     const verificationMethodId = vc.proof?.verificationMethod;
     const verificationMethod = didDocument.verificationMethod?.find(vm => vm.id === verificationMethodId);
-    
+
     if (!verificationMethod) {
       console.error(`[JSON-LD VC] ✗ Verification method not found: ${verificationMethodId}`);
       throw new Error(`Verification method not found: ${verificationMethodId}`);
     }
-    
+
     console.log(`[JSON-LD VC] Using verification method: ${verificationMethod.id}`);
     console.log(`[JSON-LD VC] Key type: ${verificationMethod.type}`);
-    
+
     // TODO: Implement full JSON-LD signature verification
     // This would require a JSON-LD proof verification library
     console.log(`[JSON-LD VC] ⚠ Note: Full JSON-LD signature verification not yet implemented`);
     console.log(`[JSON-LD VC] ✓ Issuer DID resolved and verified (signature check pending)`);
-    
+
     return {
       verified: true,
       issuer: issuerDid,
       verificationMethod: verificationMethod.id,
       note: 'Full JSON-LD signature verification pending implementation'
     };
-    
+
   } catch (error) {
     console.error(`[JSON-LD VC] ✗ Issuer verification failed: ${error.message}`);
     throw error;
@@ -247,12 +247,12 @@ app.get('/v1/verify/vp-request/req_e85eebdd-5cce-418b-8c7f-cbbd2a3b20c7', async 
   console.log('Headers:', req.headers);
   console.log('Query:', req.query);
   console.log('Body:', req.body);
-  
+
   // Generate cryptographically secure nonce and state (minimum 16 chars as per wallet requirements)
   const nonce = generateRandomString(32); // 64 hex characters
   const state = generateRandomString(32); // 64 hex characters
   const sessionId = generateRandomString(16);
-  
+
   // Store state/nonce for later verification
   activeRequests.set(state, {
     nonce,
@@ -260,11 +260,11 @@ app.get('/v1/verify/vp-request/req_e85eebdd-5cce-418b-8c7f-cbbd2a3b20c7', async 
     sessionId,
     requestUri: req.url
   });
-  
+
   console.log('Generated nonce:', nonce);
   console.log('Generated state:', state);
   console.log('Active requests count:', activeRequests.size);
-  
+
   const payload = {
     response_uri: 'https://masked-unprofitably-ardith.ngrok-free.dev/v1/verify/response',
     iss: 'did:web:masked-unprofitably-ardith.ngrok-free.dev',
@@ -335,9 +335,9 @@ app.get('/v1/verify/vp-request/req_e85eebdd-5cce-418b-8c7f-cbbd2a3b20c7', async 
     console.log('Signing JWT with kid:', demoJwk.kid);
     // CRITICAL: Use 'oauth-authz-req+jwt' as typ per OpenID4VP spec
     const jwt = await new SignJWT(payload)
-      .setProtectedHeader({ 
-        alg: 'EdDSA', 
-        kid: demoJwk.kid, 
+      .setProtectedHeader({
+        alg: 'EdDSA',
+        kid: demoJwk.kid,
         typ: 'oauth-authz-req+jwt'  // Required by wallet validation
       })
       .setIssuedAt()
@@ -431,9 +431,9 @@ app.post('/v1/verify/response', async (req, res) => {
   console.log('\n=== [VP Response] POST /v1/verify/response ===');
   console.log('Headers:', req.headers);
   console.log('Body:', JSON.stringify(req.body, null, 2));
-  
+
   let { vp_token, presentation_submission, state } = req.body;
-  
+
   // Parse JSON strings if needed
   if (typeof vp_token === 'string' && vp_token.startsWith('{')) {
     try {
@@ -442,7 +442,7 @@ app.post('/v1/verify/response', async (req, res) => {
       console.log('vp_token is a JSON-LD string, keeping as is');
     }
   }
-  
+
   if (typeof presentation_submission === 'string') {
     try {
       presentation_submission = JSON.parse(presentation_submission);
@@ -451,45 +451,45 @@ app.post('/v1/verify/response', async (req, res) => {
       console.error('Failed to parse presentation_submission:', e);
     }
   }
-  
+
   // Validation 1: Check required parameters
   if (!vp_token || !presentation_submission || !state) {
     console.error('ERROR: Missing required parameters');
-    return res.status(400).json({ 
+    return res.status(400).json({
       error: 'invalid_request',
       error_description: 'Missing required parameters: vp_token, presentation_submission, or state'
     });
   }
-  
+
   console.log('Received VP Token:', typeof vp_token === 'string' ? vp_token.substring(0, 100) + '...' : vp_token);
   console.log('Presentation Submission:', JSON.stringify(presentation_submission, null, 2));
   console.log('State:', state);
-  
+
   // Validation 2: Verify state exists and retrieve nonce
   const requestData = activeRequests.get(state);
   if (!requestData) {
     console.error('ERROR: Invalid or expired state:', state);
-    return res.status(400).json({ 
+    return res.status(400).json({
       error: 'invalid_request',
       error_description: 'Invalid or expired state parameter'
     });
   }
-  
+
   console.log('✓ State validated successfully');
   console.log('Original nonce:', requestData.nonce);
   console.log('Session ID:', requestData.sessionId);
-  
+
   // Validation 3: Verify presentation_submission structure
   if (!presentation_submission.id || !presentation_submission.definition_id || !presentation_submission.descriptor_map) {
     console.error('ERROR: Invalid presentation_submission structure');
-    return res.status(400).json({ 
+    return res.status(400).json({
       error: 'invalid_request',
       error_description: 'Invalid presentation_submission structure'
     });
   }
-  
+
   console.log('✓ Presentation submission structure validated');
-  
+
   // Validation 4: Parse and verify VP token
   let vpData;
   try {
@@ -499,56 +499,56 @@ app.post('/v1/verify/response', async (req, res) => {
       console.log('VP Token format: JWT');
       const decoded = decodeJwt(vp_token);
       console.log('Decoded VP JWT:', JSON.stringify(decoded, null, 2));
-      
+
       // Verify nonce in VP JWT
       if (decoded.nonce && decoded.nonce !== requestData.nonce) {
         console.error('ERROR: Nonce mismatch');
         console.error('Expected:', requestData.nonce);
         console.error('Received:', decoded.nonce);
-        return res.status(400).json({ 
+        return res.status(400).json({
           error: 'invalid_request',
           error_description: 'Nonce mismatch'
         });
       }
-      
+
       console.log('✓ Nonce validated successfully');
-      
+
       // In production, verify JWT signature using holder's DID
       // const holderDid = decoded.iss;
       // await verifyVPSignature(vp_token, holderDid);
-      
+
       vpData = decoded.vp || decoded;
     } else if (typeof vp_token === 'object') {
       // JSON-LD format
       console.log('VP Token format: JSON-LD');
       vpData = vp_token;
-      
+
       // In production, verify JSON-LD proof
       // await verifyLinkedDataProof(vp_token);
     } else {
       console.error('ERROR: Unsupported VP token format');
-      return res.status(400).json({ 
+      return res.status(400).json({
         error: 'invalid_request',
         error_description: 'Unsupported VP token format'
       });
     }
-    
+
     console.log('✓ VP token format validated');
-    
+
     // Validation 5: Verify issuer of each Verifiable Credential
     console.log('\n=== [Issuer Verification] Starting issuer verification for all credentials ===');
-    
+
     if (vpData.verifiableCredential) {
-      const credentials = Array.isArray(vpData.verifiableCredential) 
-        ? vpData.verifiableCredential 
+      const credentials = Array.isArray(vpData.verifiableCredential)
+        ? vpData.verifiableCredential
         : [vpData.verifiableCredential];
-      
+
       console.log(`[Issuer Verification] Found ${credentials.length} credential(s) to verify`);
-      
+
       for (let index = 0; index < credentials.length; index++) {
         const vc = credentials[index];
         console.log(`\n[Issuer Verification] ========== Credential ${index + 1}/${credentials.length} ==========`);
-        
+
         try {
           if (typeof vc === 'string' && vc.split('.').length === 3) {
             // JWT VC
@@ -570,25 +570,25 @@ app.post('/v1/verify/response', async (req, res) => {
           }
         } catch (error) {
           console.error(`[Issuer Verification] ✗ Failed to verify credential ${index + 1}: ${error.message}`);
-          return res.status(400).json({ 
+          return res.status(400).json({
             error: 'invalid_credential',
             error_description: `Issuer verification failed for credential ${index + 1}: ${error.message}`
           });
         }
       }
-      
+
       console.log(`\n[Issuer Verification] ✓✓✓ All ${credentials.length} credential(s) verified successfully! ✓✓✓\n`);
     } else {
       console.log('[Issuer Verification] No verifiable credentials found in VP');
     }
-    
+
     // Validation 6: Extract and log credential data
     if (vpData.verifiableCredential) {
       console.log('\n--- Verifiable Credentials in VP ---');
-      const credentials = Array.isArray(vpData.verifiableCredential) 
-        ? vpData.verifiableCredential 
+      const credentials = Array.isArray(vpData.verifiableCredential)
+        ? vpData.verifiableCredential
         : [vpData.verifiableCredential];
-      
+
       credentials.forEach((vc, index) => {
         console.log(`\nCredential ${index + 1}:`);
         if (typeof vc === 'string') {
@@ -605,7 +605,7 @@ app.post('/v1/verify/response', async (req, res) => {
         }
       });
     }
-    
+
     // Validation 7: Verify descriptor_map matches presentation_definition
     console.log('\n--- Descriptor Map Validation ---');
     presentation_submission.descriptor_map.forEach((descriptor, index) => {
@@ -614,26 +614,26 @@ app.post('/v1/verify/response', async (req, res) => {
       console.log('  Format:', descriptor.format);
       console.log('  Path:', descriptor.path);
     });
-    
+
     console.log('\n✓ All validations passed!');
-    
+
     // Success - remove used state
     activeRequests.delete(state);
     console.log('Removed state from active requests');
-    
+
     // Send success response
-    res.status(200).json({ 
+    res.status(200).json({
       status: 'success',
       message: 'Verifiable Presentation verified successfully',
       redirect_uri: 'https://masked-unprofitably-ardith.ngrok-free.dev/success',
       session_id: requestData.sessionId
     });
-    
+
     console.log('\n=== VP Verification Complete ===\n');
-    
+
   } catch (error) {
     console.error('ERROR during VP verification:', error);
-    return res.status(400).json({ 
+    return res.status(400).json({
       error: 'invalid_request',
       error_description: error.message
     });
@@ -646,12 +646,12 @@ app.post('/v1/verify/vp-request/req_e85eebdd-5cce-418b-8c7f-cbbd2a3b20c7', async
   console.log('Headers:', req.headers);
   console.log('Wallet Metadata:', JSON.stringify(req.body, null, 2));
   console.log('Query:', req.query);
-  
+
   // Generate cryptographically secure nonce and state (minimum 16 chars as per wallet requirements)
   const nonce = generateRandomString(32);
   const state = generateRandomString(32);
   const sessionId = generateRandomString(16);
-  
+
   // Store state/nonce for later verification
   activeRequests.set(state, {
     nonce,
@@ -660,10 +660,10 @@ app.post('/v1/verify/vp-request/req_e85eebdd-5cce-418b-8c7f-cbbd2a3b20c7', async
     requestUri: req.url,
     walletMetadata: req.body
   });
-  
+
   console.log('Generated nonce:', nonce);
   console.log('Generated state:', state);
-  
+
   // Same response as GET, but with wallet metadata logged
   const payload = {
     response_uri: 'https://masked-unprofitably-ardith.ngrok-free.dev/v1/verify/response',
@@ -734,9 +734,9 @@ app.post('/v1/verify/vp-request/req_e85eebdd-5cce-418b-8c7f-cbbd2a3b20c7', async
     const privateKey = await importJWK(demoJwk, 'EdDSA');
     console.log('Signing JWT with kid:', demoJwk.kid);
     const jwt = await new SignJWT(payload)
-      .setProtectedHeader({ 
-        alg: 'EdDSA', 
-        kid: demoJwk.kid, 
+      .setProtectedHeader({
+        alg: 'EdDSA',
+        kid: demoJwk.kid,
         typ: 'oauth-authz-req+jwt'  // Required by wallet validation
       })
       .setIssuedAt()
@@ -751,6 +751,257 @@ app.post('/v1/verify/vp-request/req_e85eebdd-5cce-418b-8c7f-cbbd2a3b20c7', async
   }
 });
 
+// ==========================================
+// OpenID4VCI (Issuance) Endpoints
+// ==========================================
+
+const ISSUER_BASE_URL = 'https://masked-unprofitably-ardith.ngrok-free.dev';
+
+// Store issuance sessions
+const issuanceSessions = new Map();
+
+// 1. Metadata Endpoint
+app.get('/.well-known/openid-credential-issuer', (req, res) => {
+  console.log('GET /.well-known/openid-credential-issuer');
+
+  // 1. JWT Format (jwt_vc_json)
+  const jwtConfig = {
+    format: "jwt_vc_json",
+    scope: "IdentityCredential",
+    cryptographic_binding_methods_supported: ["did:web", "did:key"],
+    credential_signing_alg_values_supported: ["EdDSA", "ES256"],
+    credential_definition: {
+      type: ["VerifiableCredential", "IdentityCredential"],
+      credentialSubject: {}
+    }
+  };
+
+  // 2. LDP Format (ldp_vc) - Common in Inji/Mosip
+  const ldpConfig = {
+    format: "ldp_vc",
+    scope: "IdentityCredential_LDP",
+    cryptographic_binding_methods_supported: ["did:web", "did:key"],
+    credential_signing_alg_values_supported: ["EdDSA", "ES256"],
+    credential_definition: {
+      "@context": ["https://www.w3.org/2018/credentials/v1"],
+      type: ["VerifiableCredential", "IdentityCredential"],
+      credentialSubject: {}
+    }
+  };
+
+  // 3. SD-JWT Format (vc+sd-jwt)
+  const sdJwtConfig = {
+    format: "vc+sd-jwt",
+    scope: "IdentityCredential_SD",
+    cryptographic_binding_methods_supported: ["did:web", "did:key"],
+    credential_signing_alg_values_supported: ["EdDSA", "ES256"],
+    vct: "IdentityCredential"
+  };
+
+  res.json({
+    credential_issuer: ISSUER_BASE_URL,
+    authorization_server: ISSUER_BASE_URL,
+    credential_endpoint: `${ISSUER_BASE_URL}/credential`,
+    batch_credential_endpoint: `${ISSUER_BASE_URL}/batch_credential`,
+    deferred_credential_endpoint: `${ISSUER_BASE_URL}/deferred_credential`,
+
+    // New draft 13+ support
+    credential_configurations_supported: {
+      "IdentityCredential": {
+        format: "jwt_vc_json",
+        cryptographic_binding_methods_supported: ["did:web", "did:key"],
+        credential_signing_alg_values_supported: ["EdDSA", "ES256"],
+        credential_definition: {
+          type: ["VerifiableCredential", "IdentityCredential"],
+          credentialSubject: {}
+        }
+      },
+      "IdentityCredential_LDP": {
+        format: "ldp_vc",
+        cryptographic_binding_methods_supported: ["did:web", "did:key"],
+        credential_signing_alg_values_supported: ["EdDSA", "ES256"],
+        credential_definition: {
+          "@context": ["https://www.w3.org/2018/credentials/v1"],
+          type: ["VerifiableCredential", "IdentityCredential"],
+          credentialSubject: {}
+        }
+      },
+      "IdentityCredential_SD": {
+        format: "vc+sd-jwt",
+        cryptographic_binding_methods_supported: ["did:web", "did:key"],
+        credential_signing_alg_values_supported: ["EdDSA", "ES256"],
+        vct: "IdentityCredential"
+      },
+      "DriverLicenseCredential": {
+        format: "jwt_vc_json",
+        cryptographic_binding_methods_supported: ["did:web", "did:key"],
+        credential_signing_alg_values_supported: ["EdDSA", "ES256"],
+        credential_definition: {
+          type: ["VerifiableCredential", "DriverLicenseCredential"],
+          credentialSubject: {}
+        }
+      }
+    },
+
+    // Legacy support (Draft 11/12)
+    credentials_supported: [
+      { id: "IdentityCredential", ...jwtConfig },
+      { id: "IdentityCredential_LDP", ...ldpConfig },
+      { id: "IdentityCredential_SD", ...sdJwtConfig },
+      { id: "DriverLicenseCredential", ...jwtConfig, scope: "DriverLicenseCredential" }
+    ],
+
+    display: [
+      {
+        name: "WSO2 Demo Issuer",
+        locale: "en-US"
+      }
+    ]
+  });
+});
+
+// 2. Authorization Server Metadata (for Wallet to find token endpoint)
+app.get('/.well-known/oauth-authorization-server', (req, res) => {
+  res.json({
+    issuer: ISSUER_BASE_URL,
+    token_endpoint: `${ISSUER_BASE_URL}/token`,
+    authorization_endpoint: `${ISSUER_BASE_URL}/authorize`,
+    response_types_supported: ["code", "pre-authorized_code"],
+    grant_types_supported: ["authorization_code", "urn:ietf:params:oauth:grant-type:pre-authorized_code"],
+    token_endpoint_auth_methods_supported: ["none"]
+  });
+});
+
+// 3. Token Endpoint (Mock)
+app.post('/token', (req, res) => {
+  console.log('POST /token', req.body);
+  const { grant_type, 'pre-authorized_code': preAuthCode } = req.body;
+
+  // Validate pre-auth code if present
+  if (preAuthCode) {
+    // In a real app, validate code. Here we accept any non-empty code.
+  }
+
+  res.json({
+    access_token: "mock_access_token_" + generateRandomString(16),
+    token_type: "Bearer",
+    expires_in: 86400,
+    c_nonce: generateRandomString(16),
+    c_nonce_expires_in: 86400
+  });
+});
+
+// 4. Credential Endpoint
+app.post('/credential', async (req, res) => {
+  console.log('POST /credential', req.body);
+  const { format, proof } = req.body;
+
+  if (!proof || !proof.jwt) {
+    return res.status(400).json({ error: "invalid_proof", error_description: "Missing JWT proof" });
+  }
+
+  try {
+    // Verify proof of possession (POP)
+    const proofJwt = proof.jwt;
+    const decodedProof = decodeJwt(proofJwt);
+    const holderDid = decodedProof.iss;
+    console.log(`[Issuance] Holder DID from proof: ${holderDid}`);
+    // Check nonce in proof logic here...
+
+    // Construct the VC
+    // Default subject data using holder's DID
+    const subject = {
+      id: holderDid,
+      given_name: "John",
+      family_name: "Doe",
+      birth_date: "1980-01-01",
+      license_number: "DL-12345678",
+      driving_privileges: "Class C"
+    };
+
+    // Construct VC Payload
+    const vcPayload = {
+      sub: holderDid,
+      iss: ISSUER_BASE_URL.replace('https://', 'did:web:'), // did:web issuer
+      nbf: Math.floor(Date.now() / 1000),
+      vc: {
+        "@context": ["https://www.w3.org/2018/credentials/v1"],
+        type: ["VerifiableCredential"], // Will add specific type below
+        credentialSubject: subject
+      },
+      jti: generateRandomString(16)
+    };
+
+    // Create specific credential based on requested format/type
+    // Note: Request body structure depends on format (jwt_vc_json vs ldp_vc)
+    // Assuming jwt_vc_json for demo
+
+    // Sign VC
+    const privateKey = await importJWK(demoJwk, 'EdDSA');
+    const signedVc = await new SignJWT(vcPayload)
+      .setProtectedHeader({ alg: 'EdDSA', kid: demoJwk.kid })
+      .setIssuedAt()
+      .setIssuer(vcPayload.iss)
+      .setSubject(vcPayload.sub)
+      .sign(privateKey);
+
+    console.log('[Issuance] Credential Issued');
+
+    res.json({
+      format: "jwt_vc_json",
+      credential: signedVc,
+      c_nonce: generateRandomString(16),
+      c_nonce_expires_in: 86400
+    });
+
+  } catch (e) {
+    console.error('Credential issuance error:', e);
+    res.status(500).json({ error: "server_error" });
+  }
+});
+
+// 5. Offer Generation Endpoint (Helper for UI)
+app.post('/v1/issuance/create-offer', (req, res) => {
+  const { credential_configuration_ids } = req.body;
+  const preAuthCode = generateRandomString(12);
+
+  const offer = {
+    credential_issuer: ISSUER_BASE_URL,
+    credential_configuration_ids: credential_configuration_ids || ["IdentityCredential"],
+    grants: {
+      "urn:ietf:params:oauth:grant-type:pre-authorized_code": {
+        "pre-authorized_code": preAuthCode,
+        "user_pin_required": false
+      }
+    }
+  };
+
+  // Create openid-credential-offer URI
+  // We can embed the JSON by value or by reference.
+  // By reference is cleaner for QR codes.
+  const offerId = generateRandomString(8);
+  issuanceSessions.set(offerId, offer);
+
+  const offerUri = `${ISSUER_BASE_URL}/v1/issuance/offer/${offerId}`;
+  const qrCode = `openid-credential-offer://?credential_offer_uri=${encodeURIComponent(offerUri)}`;
+
+  res.json({
+    offer_uri: offerUri, // For deep link
+    qr_code: qrCode,     // For display
+    raw_offer: offer
+  });
+});
+
+app.get('/v1/issuance/offer/:id', (req, res) => {
+  const offer = issuanceSessions.get(req.params.id);
+  if (offer) {
+    res.json(offer);
+  } else {
+    res.status(404).json({ error: "not_found" });
+  }
+});
+
 app.listen(PORT, () => {
+
   console.log(`API server running on http://localhost:${PORT}`);
 });

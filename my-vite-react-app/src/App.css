@@ -169,7 +169,7 @@
     background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
     border-radius: 20px;
     padding: 3rem;
-    max-width: 700px;
+    max-width: 900px;
     width: 100%;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -249,7 +249,30 @@
 }
 
 .home-actions {
-    text-align: center;
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.show-tokens-btn {
+    padding: 1rem 2.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    font-size: 1em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 200px;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.show-tokens-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
 }
 
 .sign-out-btn {
@@ -269,6 +292,95 @@
     background: rgba(255, 255, 255, 0.15);
     border-color: rgba(255, 255, 255, 0.3);
     transform: translateY(-2px);
+}
+
+/* Token Display Styles */
+.tokens-section {
+    margin-top: 3rem;
+    max-width: 100%;
+}
+
+.token-container {
+    margin-bottom: 2.5rem;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 15px;
+    padding: 1.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.token-title {
+    color: #667eea;
+    font-size: 1.3em;
+    margin-top: 0;
+    margin-bottom: 1rem;
+}
+
+.token-box {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    max-height: 150px;
+    overflow: auto;
+}
+
+.token-text {
+    color: #fbbf24;
+    font-family: 'Courier New', monospace;
+    font-size: 0.85em;
+    margin: 0;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+    line-height: 1.4;
+}
+
+.decoded-title {
+    color: #a0a0a0;
+    font-size: 1.1em;
+    margin-bottom: 1rem;
+}
+
+.decoded-box {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
+    padding: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    max-height: 400px;
+    overflow: auto;
+}
+
+.decoded-text {
+    color: #4ade80;
+    font-family: 'Courier New', monospace;
+    font-size: 0.85em;
+    margin: 0;
+    white-space: pre;
+    line-height: 1.5;
+}
+
+/* Custom scrollbar for token boxes */
+.token-box::-webkit-scrollbar,
+.decoded-box::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.token-box::-webkit-scrollbar-track,
+.decoded-box::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+}
+
+.token-box::-webkit-scrollbar-thumb,
+.decoded-box::-webkit-scrollbar-thumb {
+    background: rgba(102, 126, 234, 0.5);
+    border-radius: 4px;
+}
+
+.token-box::-webkit-scrollbar-thumb:hover,
+.decoded-box::-webkit-scrollbar-thumb:hover {
+    background: rgba(102, 126, 234, 0.7);
 }
 
 /* Responsive Design */

@@ -1,8 +1,48 @@
 import { useAuthContext } from "@asgardeo/auth-react";
+import { useState } from "react";
 
 export const HomePage = () => {
 
-    const { signOut, state } = useAuthContext();
+    const { signOut, state, getIDToken, getAccessToken } = useAuthContext();
+    const [showTokens, setShowTokens] = useState(false);
+    const [idToken, setIdToken] = useState(null);
+    const [accessToken, setAccessToken] = useState(null);
+    const [decodedIdToken, setDecodedIdToken] = useState(null);
+    const [decodedAccessToken, setDecodedAccessToken] = useState(null);
+
+    // Function to decode JWT token
+    const decodeJWT = (token) => {
+        try {
+            const base64Url = token.split('.')[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            const jsonPayload = decodeURIComponent(
+                atob(base64)
+                    .split('')
+                    .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+                    .join('')
+            );
+            return JSON.parse(jsonPayload);
+        } catch (error) {
+            console.error("Error decoding token:", error);
+            return null;
+        }
+    };
+
+    // Function to fetch and display tokens
+    const handleShowTokens = async () => {
+        try {
+            const idTokenValue = await getIDToken();
+            const accessTokenValue = await getAccessToken();
+            
+            setIdToken(idTokenValue);
+            setAccessToken(accessTokenValue);
+            setDecodedIdToken(decodeJWT(idTokenValue));
+            setDecodedAccessToken(decodeJWT(accessTokenValue));
+            setShowTokens(true);
+        } catch (error) {
+            console.error("Error fetching tokens:", error);
+        }
+    };
 
     return (
         <div className="home-container">
@@ -39,10 +79,53 @@ export const HomePage = () => {
                 </div>
 
                 <div className="home-actions">
+                    <button className="show-tokens-btn" onClick={handleShowTokens}>
+                        {showTokens ? "Refresh Tokens" : "Show Tokens"}
+                    </button>
                     <button className="sign-out-btn" onClick={ () => signOut() }>
                         Sign Out
                     </button>
                 </div>
+
+                {showTokens && (
+                    <div className="tokens-section">
+                        {/* ID Token Section */}
+                        <div className="token-container">
+                            <h3 className="token-title">ID Token</h3>
+                            <div className="token-box">
+                                <pre className="token-text">{idToken}</pre>
+                            </div>
+                            {decodedIdToken && (
+                                <>
+                                    <h4 className="decoded-title">Decoded ID Token</h4>
+                                    <div className="decoded-box">
+                                        <pre className="decoded-text">
+                                            {JSON.stringify(decodedIdToken, null, 2)}
+                                        </pre>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+
+                        {/* Access Token Section */}
+                        <div className="token-container">
+                            <h3 className="token-title">Access Token</h3>
+                            <div className="token-box">
+                                <pre className="token-text">{accessToken}</pre>
+                            </div>
+                            {decodedAccessToken && (
+                                <>
+                                    <h4 className="decoded-title">Decoded Access Token</h4>
+                                    <div className="decoded-box">
+                                        <pre className="decoded-text">
+                                            {JSON.stringify(decodedAccessToken, null, 2)}
+                                        </pre>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );
