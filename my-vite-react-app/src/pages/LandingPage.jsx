@@ -6,15 +6,50 @@ import { SignInBtn } from "../components/SignInBtn";
 
 export const LandingPage = () => { 
 
-    const { state } = useAuthContext();
+    const { state, getAccessToken, getIDToken, getBasicUserInfo, signIn } = useAuthContext();
     const navigate = useNavigate();
 
+    // Log every state change
     useEffect(() => {
-        // Redirect to the home page if the user is already authenticated.
+        console.log('[LandingPage] state changed:', JSON.stringify(state));
+    }, [state]);
+
+    // On callback, try to complete sign-in and log tokens
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        if (params.has('code')) {
+            console.log('[LandingPage] Auth code detected, calling signIn() to complete exchange...');
+            signIn()
+                .then((response) => {
+                    console.log('[LandingPage] signIn() resolved:', response);
+                })
+                .catch((err) => {
+                    console.error('[LandingPage] signIn() rejected:', err);
+                });
+        }
+    }, []);
+
+    // Log tokens when authenticated
+    useEffect(() => {
         if (state?.isAuthenticated) {
+            console.log('[LandingPage] ✅ Authenticated! Fetching tokens...');
+            
+            getAccessToken().then(token => {
+                console.log('[LandingPage] Access Token:', token?.substring(0, 50) + '...');
+            }).catch(e => console.error('[LandingPage] getAccessToken error:', e));
+
+            getIDToken().then(token => {
+                console.log('[LandingPage] ID Token:', token?.substring(0, 50) + '...');
+            }).catch(e => console.error('[LandingPage] getIDToken error:', e));
+
+            getBasicUserInfo().then(info => {
+                console.log('[LandingPage] User Info:', JSON.stringify(info));
+            }).catch(e => console.error('[LandingPage] getBasicUserInfo error:', e));
+
+            console.log('[LandingPage] Navigating to /home...');
             navigate("/home", { replace: true });
         }
-    }, [ state ]);
+    }, [state?.isAuthenticated]);
 
     return (
         <div className="oid4vp-container">
