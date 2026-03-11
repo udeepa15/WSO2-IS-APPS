@@ -4,32 +4,22 @@ import { AuthProvider } from "@asgardeo/auth-react";
 import App from "./App.jsx";
 import "./index.css";
 
-// Clear stale Asgardeo SDK cache so the SDK re-resolves endpoints fresh.
-// During the OAuth callback (?code=...) we keep EVERYTHING — the SDK needs
-// temporary_data (PKCE verifier), config_data, and oidc_provider_meta_data
-// to complete the token exchange.
-const _params = new URLSearchParams(window.location.search);
-const _isCallback = _params.has('code') || _params.has('error');
-const _clientID = "72rLXxnPqcDV43mkzODwRsfG28Ea";
-const removed = [];
-if (!_isCallback) {
-    for (const key of Object.keys(sessionStorage)) {
-        if (key.includes(_clientID)) {
-            removed.push(key);
-            sessionStorage.removeItem(key);
-        }
-    }
-}
-console.log('[Auth] isCallback:', _isCallback);
-console.log('[Auth] Cleared SDK sessionStorage keys:', removed.length ? removed : '(none — callback, keeping all)');
-console.log('[Auth] Remaining sessionStorage keys:', Object.keys(sessionStorage));
+// NOTE: We intentionally do NOT clear the SDK's sessionStorage keys here.
+// With overrideWellEndpointConfig:true all endpoints are statically configured
+// so there is no stale discovery-cache problem.
+// More importantly, signOut() stores a logout-state nonce in sessionStorage
+// BEFORE redirecting to the endSessionEndpoint. Wiping those keys on the
+// post-logout redirect prevents the SDK from properly finalising the logout,
+// which leaves the WSO2 IS server-side session alive and causes silent
+// re-authentication on the next signIn() call.
+console.log('[Auth] sessionStorage keys at init:', Object.keys(sessionStorage));
 
 const NGROK = "https://masked-unprofitably-ardith.ngrok-free.dev";
 
 const asgardeoAuthConfig = {
     signInRedirectURL: "http://localhost:5173",
     signOutRedirectURL: "http://localhost:5173",
-    clientID: "72rLXxnPqcDV43mkzODwRsfG28Ea",
+    clientID: "qjYivYUuj09fA3c2VUf_fcsVR2sa",
     baseUrl: NGROK,
     scope: [ "openid", "profile", "email" ],
     enablePKCE: true,

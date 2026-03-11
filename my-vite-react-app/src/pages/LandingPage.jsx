@@ -6,7 +6,7 @@ import { SignInBtn } from "../components/SignInBtn";
 
 export const LandingPage = () => { 
 
-    const { state, getAccessToken, getIDToken, getBasicUserInfo, signIn } = useAuthContext();
+    const { state, getAccessToken, getIDToken, getBasicUserInfo } = useAuthContext();
     const navigate = useNavigate();
 
     // Log every state change
@@ -14,24 +14,17 @@ export const LandingPage = () => {
         console.log('[LandingPage] state changed:', JSON.stringify(state));
     }, [state]);
 
-    // On callback, try to complete sign-in and log tokens
-    useEffect(() => {
-        const params = new URLSearchParams(window.location.search);
-        if (params.has('code')) {
-            console.log('[LandingPage] Auth code detected, calling signIn() to complete exchange...');
-            signIn()
-                .then((response) => {
-                    console.log('[LandingPage] signIn() resolved:', response);
-                })
-                .catch((err) => {
-                    console.error('[LandingPage] signIn() rejected:', err);
-                });
-        }
-    }, []);
+    // NOTE: Do NOT call signIn() here manually when ?code= is present.
+    // AuthProvider handles the callback automatically. Calling signIn() a
+    // second time races with AuthProvider, consumes the one-time auth code
+    // first, and then the AuthProvider's internal call (or vice-versa) starts
+    // a fresh authorization flow — redirecting the user back to WSO2 login.
 
-    // Log tokens when authenticated
+    // Navigate to /home once AuthProvider finishes the callback and sets
+    // isAuthenticated = true. Guard on isLoading so we never navigate on a
+    // stale/intermediate state.
     useEffect(() => {
-        if (state?.isAuthenticated) {
+        if (!state?.isLoading && state?.isAuthenticated) {
             console.log('[LandingPage] ✅ Authenticated! Fetching tokens...');
             
             getAccessToken().then(token => {
@@ -49,7 +42,17 @@ export const LandingPage = () => {
             console.log('[LandingPage] Navigating to /home...');
             navigate("/home", { replace: true });
         }
-    }, [state?.isAuthenticated]);
+    }, [state?.isLoading, state?.isAuthenticated]);
+
+    // While AuthProvider is processing the OAuth callback, show a neutral
+    // loading screen — never render the sign-in button during that window.
+    if (state?.isLoading) {
+        return (
+            <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
+                <p>Signing in…</p>
+            </div>
+        );
+    }
 
     return (
         <div className="oid4vp-container">
