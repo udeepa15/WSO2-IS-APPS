@@ -19,7 +19,7 @@ const NGROK = "https://masked-unprofitably-ardith.ngrok-free.dev";
 const asgardeoAuthConfig = {
     signInRedirectURL: "http://localhost:5173",
     signOutRedirectURL: "http://localhost:5173",
-    clientID: "qjYivYUuj09fA3c2VUf_fcsVR2sa",
+    clientID: "n1YZSbAXg_RgpDwHR1VpAf1oTfsa",
     baseUrl: NGROK,
     scope: [ "openid", "profile", "email" ],
     enablePKCE: true,
